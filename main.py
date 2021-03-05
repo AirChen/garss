@@ -37,7 +37,6 @@ def get_rss_info(feed_url):
             print(feed_url+"第+"+str(i)+"+次请求出错==>>",e)
             pass
 
-
     return result["result"]
     
 
@@ -66,38 +65,37 @@ def send_mail(email, title, contents):
         else:
             print("无法获取发件人信息")
     
-    # 连接邮箱服务器
-    # yag = yagmail.SMTP(user=user, password=password, host=host)
+    # 连接邮箱服务器    
     yag = yagmail.SMTP(user = user, password = password, host=host)
     # 发送邮件
     yag.send(email, title, contents)
 
 def replace_readme():
-    new_edit_readme_md = [""]
+    new_edit_readme_md = ""
     # 读取EditREADME.md
     with open(os.path.join(os.getcwd(),"EditREADME.md"),'r') as load_f:
         edit_readme_md = load_f.read();
-        new_edit_readme_md[0] = edit_readme_md
+        new_edit_readme_md = edit_readme_md
         before_info_list =  re.findall(r'\[订阅地址\]\(.*\).*\{\{latest_content\}\}' ,edit_readme_md);
         # 填充统计RSS数量
-        new_edit_readme_md[0] = new_edit_readme_md[0].replace("{{rss_num}}", str(len(before_info_list)))
+        new_edit_readme_md = new_edit_readme_md.replace("{{rss_num}}", str(len(before_info_list)))
         # 填充统计时间
         ga_rss_datetime = datetime.fromtimestamp(int(time.time()),pytz.timezone('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S')
-        new_edit_readme_md[0] = new_edit_readme_md[0].replace("{{ga_rss_datetime}}", str(ga_rss_datetime))
+        new_edit_readme_md = new_edit_readme_md.replace("{{ga_rss_datetime}}", str(ga_rss_datetime))
 
         for before_info in before_info_list:
             # 获取link
             link = re.findall(r'\[订阅地址\]\((.*)\)', before_info)[0]
             # 生成超链接
-            rss_info = get_rss_info(link)
-            latest_content = ""
-            latest_content = "[暂无法通过爬虫获取信息](https://github.com/AirChen/garss)"
+            rss_info = get_rss_info(link)                        
             
-            if(len(rss_info) > 0):
-                rss_info[0]["title"] = rss_info[0]["title"].replace("|", "\|")
-                rss_info[0]["title"] = rss_info[0]["title"].replace("[", "\[")
-                rss_info[0]["title"] = rss_info[0]["title"].replace("]", "\]")
-                latest_content = "[" + "‣ " + rss_info[0]["title"] +"](" + rss_info[0]["link"] +")"
+            if(len(rss_info) < 1):
+                continue
+            
+            rss_info[0]["title"] = rss_info[0]["title"].replace("|", "\|")
+            rss_info[0]["title"] = rss_info[0]["title"].replace("[", "\[")
+            rss_info[0]["title"] = rss_info[0]["title"].replace("]", "\]")
+            latest_content = "[" + "‣ " + rss_info[0]["title"] +"](" + rss_info[0]["link"] +")"
 
             if(len(rss_info) > 1):
                 rss_info[1]["title"] = rss_info[1]["title"].replace("|", "\|")
@@ -109,12 +107,12 @@ def replace_readme():
             after_info = before_info.replace("{{latest_content}}", latest_content)
             print("====latest_content==>", latest_content)
             # 替换edit_readme_md中的内容
-            new_edit_readme_md[0] = new_edit_readme_md[0].replace(before_info, after_info)
+            new_edit_readme_md = new_edit_readme_md.replace(before_info, after_info)
     # 将新内容
     with open(os.path.join(os.getcwd(),"README.md"),'w') as load_f:
-        load_f.write(new_edit_readme_md[0])
+        load_f.write(new_edit_readme_md)
     
-    return new_edit_readme_md[0]
+    return new_edit_readme_md
 
 
 def get_email_list():
@@ -128,7 +126,9 @@ def get_email_list():
 
 def main():
     readme_md = replace_readme()
-    content = markdown.markdown(readme_md, extensions=['tables', 'fenced_code'])
+    content = markdown.markdown(readme_md, extensions=['tables', 'fenced_code'])    
+    with open(os.path.join(os.getcwd(),"render.html"),'w') as load_f:
+        load_f.write(content)
     email_list = get_email_list()
     send_mail(email_list, "RSS订阅", content)
 

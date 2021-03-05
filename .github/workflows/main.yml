@@ -6,7 +6,7 @@ on:
     branches:    
       - main
 jobs:
-  push:
+  send_cluster_rss:
       runs-on: ubuntu-20.04
       steps:
       - uses: actions/checkout@v2 # Checking out the repo
@@ -25,8 +25,8 @@ jobs:
       - name: Commit and push if changed   # 更新README.md
         run: |
           git diff
-          git config --global user.email "zhaoolee@gmail.com"
-          git config --global user.name "zhaoolee"
+          git config --global user.email "renzhichen2012@163.com"
+          git config --global user.name "airchen"
           git add README.md
           git commit -m "Github Action auto Updated"
           git push
