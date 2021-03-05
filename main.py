@@ -91,7 +91,7 @@ def replace_readme():
             # 生成超链接
             rss_info = get_rss_info(link)
             latest_content = ""
-            latest_content = "[暂无法通过爬虫获取信息](https://github.com/zhaoolee/garss)"
+            latest_content = "[暂无法通过爬虫获取信息](https://github.com/AirChen/garss)"
             
             if(len(rss_info) > 0):
                 rss_info[0]["title"] = rss_info[0]["title"].replace("|", "\|")
@@ -130,7 +130,7 @@ def main():
     readme_md = replace_readme()
     content = markdown.markdown(readme_md, extensions=['tables', 'fenced_code'])
     email_list = get_email_list()
-    send_mail(email_list, "嘎!RSS订阅", content)
+    send_mail(email_list, "RSS订阅", content)
 
 
 main()
