@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+  <h3> 已收集{{rss_num}}个RSS源, 生成时间: {{ga_rss_datetime}} </h3>
+  <br>  
+  {% for session in session_list %}
+    <p>{{ session['title'] }}</p>
+    <ul>
+        {% for entity in session['list'] %}
+        <li>
+            <a href={{ entity['link'] }}>{{entity['title']}}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    <br>
+  {% endfor %}    
+{% endblock %}
+
+<!-- 变量
+web_title   
+rss_num
+ga_rss_datetime
+session_list session['title'] session['list'](entity_list)
+entity_list entity['link'] entity['title']
+-->

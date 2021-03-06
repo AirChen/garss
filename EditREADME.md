@@ -1,4 +1,4 @@
-# Cluster Rss (garss, 已收集{{rss_num}}个RSS源, 生成时间: {{ga_rss_datetime}})
+# Cluster Rss (已收集{{rss_num}}个RSS源, 生成时间: {{ga_rss_datetime}})
 
 | 名称 | 描述 | RSS  |  最新内容 |
 | --- | --- | --- |  --- |

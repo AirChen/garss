@@ -13,7 +13,7 @@ requests = "*"
 feedparser = "*"
 pytz = "*"
 yagmail = "*"
-markdown = "*"
+jinja2 = "*"
 
 [requires]
 python_version = "3.7"
