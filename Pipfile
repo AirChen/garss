@@ -14,6 +14,7 @@ feedparser = "*"
 pytz = "*"
 yagmail = "*"
 jinja2 = "*"
+urllib = "*"
 
 [requires]
 python_version = "3.7"
