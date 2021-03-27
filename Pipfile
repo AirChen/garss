@@ -14,7 +14,6 @@ feedparser = "*"
 pytz = "*"
 yagmail = "*"
 jinja2 = "*"
-urllib = "*"
 qiniu = "*"
 
 [requires]
