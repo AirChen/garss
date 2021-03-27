@@ -10,19 +10,18 @@ from jinja2 import FileSystemLoader, Environment
 import json
 import copy
 from urllib import parse, request
+from qiniu import Auth, put_file, etag
+import qiniu.config
+
+header_info = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"}
 
 def get_rss_info(feed_url):
     result = {"result": []}
     # 如何请求出错,则重新请求,最多五次
     for i in range(5):
-        try:
-            headers = {
-                # 设置用户代理头(为狼披上羊皮)
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
-                "Content-Encoding": "gzip"
-            }
+        try:            
             # 设置15秒钟超时
-            feed_url_content = requests.get(feed_url,  timeout= 15 ,headers = headers).content
+            feed_url_content = requests.get(feed_url,  timeout= 15 ,headers = header_info).content
             feed = feedparser.parse(feed_url_content)
             feed_entries = feed["entries"]
             feed_entries_length = len(feed_entries)
@@ -64,6 +63,7 @@ def send_mail(email, title, contents):
                 # print(load_dict)
         else:
             print("无法获取发件人信息")
+            return
     
     # 连接邮箱服务器    
     yag = yagmail.SMTP(user = user, password = password, host=host)
@@ -147,11 +147,10 @@ def get_email_list():
             email_list.append(task["email"])
     return email_list
 
-def get_bing_img_url():
+def get_bing_img():
     BING_API = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160"
     BING_URL = "https://cn.bing.com"
     
-    header_info = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"}
     req = request.Request(url=BING_API, headers=header_info)
     res = request.urlopen(req)
     res = res.read()
@@ -162,11 +161,52 @@ def get_bing_img_url():
     url_params = json_obj['images'][0]['url']
     url_img = BING_URL + url_params.split('&')[0]
 
-    return url_img
+    copy_right = json_obj['images'][0]['copyright']
+    copy_right = copy_right.split(' ')[0]    
+
+    return url_img, copy_right
+
+def save_img(url, name):
+    req = request.Request(url, headers=header_info)
+    response = request.urlopen(req)
+    filename = "./img.jpg"
+    if (response.getcode() == 200):
+        with open(filename, "wb") as f:
+            f.write(response.read())
+
+        # 七牛
+        access_key = ""
+        secret_key = ""
+        try:
+            if(os.environ["ACCESS_KEY"]):
+                access_key = os.environ["ACCESS_KEY"]
+            if(os.environ["SECRET_KEY"]):
+                secret_key = os.environ["SECRET_KEY"]            
+        except:
+            print("无法获取github的secrets配置信息,开始使用本地变量")
+            if(os.path.exists(os.path.join(os.getcwd(),"secret.json"))):
+                with open(os.path.join(os.getcwd(),"secret.json"),'r') as load_f:
+                    load_dict = json.load(load_f)
+                    access_key = load_dict["access_key"]
+                    secret_key = load_dict["secret_key"]                    
+            else:
+                print("无法上传图片至七牛云")
+                return
+        
+        #构建鉴权对象
+        q = Auth(access_key, secret_key)
+        #要上传的空间
+        bucket_name = 'bingcollection'
+        #上传后保存的文件名
+        key = name + '.jpg'
+        #生成上传 Token，可以指定过期时间等
+        token = q.upload_token(bucket_name, key, 3600)
+        #要上传文件的本地路径    
+        put_file(token, key, filename)
 
 def main():
     session_list = replace_readme()
-    bing_img = get_bing_img_url()
+    bing_img, img_name = get_bing_img()
 
     env = Environment(loader=FileSystemLoader('./templates'))
     template = env.get_template('basic.html')
@@ -177,6 +217,8 @@ def main():
 
     with open(os.path.join(os.getcwd(),"render.html"),'w') as load_f:
         load_f.write(cout_html)
+
+    save_img(bing_img, img_name)
 
     email_list = get_email_list()
     send_mail(email_list, "RSS订阅", cout_html)

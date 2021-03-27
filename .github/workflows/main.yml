@@ -19,6 +19,8 @@ jobs:
             USER: ${{ secrets.USER }}
             PASSWORD: ${{ secrets.PASSWORD }}
             HOST: ${{ secrets.HOST }}
+            ACCESS_KEY: ${{ secrets.access_key }}
+            SECRET_KEY: ${{ secrets.secret_key }}
         uses: VaultVulp/action-pipenv@v2.0.1
         with:
           command: run build
